@@ -30,4 +30,4 @@ if user_query := st.chat_input("Type your Generative AI question..."):
 st.sidebar.write("This chatbot answers only Generative AI questions. [Reset chat](#)")
 if st.sidebar.button("Start new chat"):
     st.session_state["messages"] = []
-    st.experimental_rerun()
+    st.rerun()
