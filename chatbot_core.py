@@ -31,12 +31,12 @@ system_prompt = (
 prompt_template= ChatPromptTemplate.from_messages([
     ("system", system_prompt),
     MessagesPlaceholder(variable_name="messages"),
-    ("human", "{input}")
+    
 
 ])
 # set up the trimming part
-trimmer = trim_messages(max_tokens=1800, 
-                        max_messages=10, 
+trimmer = trim_messages(
+                        max_tokens=1800,  
                         strategy="last", 
                         token_counter=model, 
                         include_system=True, 
