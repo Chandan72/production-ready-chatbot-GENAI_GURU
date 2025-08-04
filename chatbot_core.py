@@ -42,4 +42,39 @@ trimmer = trim_messages(max_tokens=1800,
                         include_system=True, 
                         allow_partial=False)
 
+# define the model calling function
+def call_model(state: MessagesState):
+    trimmed=trimmer.invoke(state["messages"])
+    prompt=prompt_template.invoke({"messages": trimmed })
+    response=model.invoke(prompt)
+    return {"messages": state["messages"]+ [response]}
+
+# stategeaph manages memory and connection to LLM
+
+workflow = StateGraph(state_schema=MessagesState)
+workflow.add_edge(START, "model")
+workflow.add_node("model", call_model)
+memory= MemorySaver()
+app=workflow.compile(checkpointer=memory)
+
+
+def get_bot_response(user_message, thread_id="default-session"):
+    config ={"configurable": {"thread_id": thread_id}}
+    input_message = [HumanMessage(content=user_message)]
+    output = app.invoke({"messages": input_message}, config=config)
+    messages=output["messages"]
+    return output["messages"][-1].content if messages else "No response generated."
+
+def stream_bot_response(user_message, thread_id="default-session"):
+    config = {"configurable": {"thread_id": thread_id}}
+    from langchain_core.messages import HumanMessage
+    input_messages = [HumanMessage(content=user_message)]
+    # This is a generator yielding content as it’s produced
+    for chunk, meta in app.stream(
+        {"messages": input_messages}, config, stream_mode="messages"
+    ):
+        if hasattr(chunk, "content"):
+            yield chunk.content
+
+
 
